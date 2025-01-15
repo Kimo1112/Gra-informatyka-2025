@@ -56,6 +56,7 @@ void movement(RenderWindow& window) {
         }
 
         bool isMoving = false;
+        bool a = 1;
 
         if (Keyboard::isKeyPressed(Keyboard::A) && Keyboard::isKeyPressed(Keyboard::W)) {
 
