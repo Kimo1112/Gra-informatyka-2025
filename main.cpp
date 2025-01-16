@@ -2,14 +2,55 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <iostream>
-#include "Menu.h"
 #include <vector>
+#include "Menu.h"
+#include "Wall.h"
+#include "WallManager.h"
 
 using namespace std;
 using namespace sf;
 
 
 int pagenumber = 1000;
+
+void collision_Floor1_Room1(RectangleShape& playerHitboxes, const WallManager& wallManager, Sprite& player) {
+    for (const auto& wall : wallManager.getWalls()) {
+        FloatRect playerBounds = playerHitboxes.getGlobalBounds();
+        FloatRect wallBounds = wall.getGlobalBounds();
+
+        if (playerHitboxes.getGlobalBounds().intersects(wall.getGlobalBounds())) {
+
+            float overlapLeft = (playerBounds.left + playerBounds.width) - wallBounds.left;
+            float overlapRight = (wallBounds.left + wallBounds.width) - playerBounds.left;
+            float overlapTop = (playerBounds.top + playerBounds.height) - wallBounds.top;
+            float overlapBottom = (wallBounds.top + wallBounds.height) - playerBounds.top;
+
+            bool fromLeft = overlapLeft < overlapRight && overlapLeft < overlapTop && overlapLeft < overlapBottom;
+            bool fromRight = overlapRight < overlapLeft && overlapRight < overlapTop && overlapRight < overlapBottom;
+            bool fromTop = overlapTop < overlapBottom && overlapTop < overlapLeft && overlapTop < overlapRight;
+            bool fromBottom = overlapBottom < overlapTop && overlapBottom < overlapLeft && overlapBottom < overlapRight;
+
+            if (fromLeft) {
+                playerHitboxes.setPosition(wallBounds.left - playerBounds.width, playerHitboxes.getPosition().y);
+                player.setPosition(wallBounds.left - playerBounds.width, player.getPosition().y);
+            }
+            else if (fromRight) {
+                playerHitboxes.setPosition(wallBounds.left + wallBounds.width, playerHitboxes.getPosition().y);
+                player.setPosition(wallBounds.left + wallBounds.width, player.getPosition().y);
+            }
+            else if (fromTop) {
+                playerHitboxes.setPosition(playerHitboxes.getPosition().x, wallBounds.top - playerBounds.height);
+                player.setPosition(player.getPosition().x, wallBounds.top - playerBounds.height);
+            }
+            else if (fromBottom) {
+                playerHitboxes.setPosition(playerHitboxes.getPosition().x, wallBounds.top + wallBounds.height);
+                player.setPosition(player.getPosition().x, wallBounds.top + wallBounds.height);
+            }
+
+            player.setPosition(playerHitboxes.getPosition() - Vector2f(50, 50));
+        }
+    }
+}
 
 void movement(RenderWindow& window) {
     vector<Texture> textures_walking_up(8);
@@ -84,7 +125,7 @@ void movement(RenderWindow& window) {
     Clock transitionClock;
 
     Sprite player;
-    player.setPosition(500, 500);
+    player.setPosition(750, 750);
     player.setScale(5, 5);
 
 
@@ -102,9 +143,21 @@ void movement(RenderWindow& window) {
     Sprite g1_bg;
     g1_bg.setTexture(gameplay1_background);
 
-    player_shadow.setPosition(545, 615);
+    player_shadow.setPosition(795, 865);
     player_shadow.setScale(4, 4);
 
+    RectangleShape playerHitbox;
+    playerHitbox.setPosition(815, 800);
+    playerHitbox.setSize(Vector2f(50,100));
+    playerHitbox.setFillColor(Color::Transparent);
+    playerHitbox.setOutlineColor(Color::Red);
+    playerHitbox.setOutlineThickness(2);
+
+    WallManager wallManager;
+
+    wallManager.addWall(Wall(483, 197, 98, 885));
+    wallManager.addWall(Wall(1335, 203, 98, 885));
+    wallManager.addWall(Wall(486, 961, 943, 108));
 
     while (window.isOpen()) {
 
@@ -117,11 +170,23 @@ void movement(RenderWindow& window) {
             }
         }
 
+        collision_Floor1_Room1(playerHitbox, wallManager, player);
 
         window.clear();
         window.draw(g1_bg);
         window.draw(player);
         window.draw(player_shadow);
+        window.draw(playerHitbox);
+    
+        wallManager.drawWalls(window);
+
+
+        for (const auto& wall : wallManager.getWalls()) {
+            if (playerHitbox.getGlobalBounds().intersects(wall.getGlobalBounds())) {
+                // Jeœli dochodzi do kolizji, zatrzymujemy gracza w miejscu
+                player.setPosition(player.getPosition() - Vector2f(1, 0));  // Mo¿esz dostosowaæ to w zale¿noœci od kierunku
+            }
+        }
 
         if (lastDirection == 0) {
             if (clock.getElapsedTime().asSeconds() >= frameDuration) {
@@ -152,6 +217,7 @@ void movement(RenderWindow& window) {
                 isMoving = true;
                 player.move(0, -5);
                 player_shadow.move(0, -5);
+                playerHitbox.move(0, -5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_up.size();
@@ -165,7 +231,8 @@ void movement(RenderWindow& window) {
                 lastDirection = 2;
                 isMoving = true;
                 player.move(0, 5);
-                player_shadow.move(0, 5);
+                player_shadow.move(0, 5); 
+                playerHitbox.move(0, 5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_down.size();
@@ -180,6 +247,7 @@ void movement(RenderWindow& window) {
                 isMoving = true;
                 player.move(-6, 0);
                 player_shadow.move(-6, 0);
+                playerHitbox.move(-6, 0);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_left.size();
@@ -194,6 +262,7 @@ void movement(RenderWindow& window) {
                 isMoving = true;
                 player.move(6, 0);
                 player_shadow.move(6, 0);
+                playerHitbox.move(6, 0);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_right.size();
@@ -208,7 +277,7 @@ void movement(RenderWindow& window) {
                 isMoving = true;
                 player.move(-5.5, -5.5);
                 player_shadow.move(-5.5, -5.5);
-
+                playerHitbox.move(-5.5, -5.5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_left_up.size();
@@ -221,8 +290,9 @@ void movement(RenderWindow& window) {
             if (Keyboard::isKeyPressed(Keyboard::D) && Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A)) {
                 isMoving = true;
                 lastDirection = 6;
-                player.move(6, -6);
-                player_shadow.move(6, -6);
+                player.move(5.5, -5.5);
+                player_shadow.move(5.5, -5.5);
+                playerHitbox.move(5.5, -5.5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_right_up.size();
@@ -235,8 +305,9 @@ void movement(RenderWindow& window) {
             if (Keyboard::isKeyPressed(Keyboard::A) && Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::D)) {
                 isMoving = true;
                 lastDirection = 7;
-                player.move(-6, 6);
-                player_shadow.move(-6, 6);
+                player.move(-5.5, 5.5);
+                player_shadow.move(-5.5, 5.5);
+                playerHitbox.move(-5.5, 5.5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_left_down.size();
@@ -249,8 +320,9 @@ void movement(RenderWindow& window) {
             if (Keyboard::isKeyPressed(Keyboard::D) && Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::W)) {
                 isMoving = true;
                 lastDirection = 8;
-                player.move(6, 6);
-                player_shadow.move(6, 6);
+                player.move(5.5, 5.5);
+                player_shadow.move(5.5, 5.5);
+                playerHitbox.move(5.5, 5.5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
                     currentFrame = (currentFrame + 1) % textures_walking_right_down.size();
@@ -408,7 +480,7 @@ int main()
     Texture mainmenu_background;
     mainmenu_background.loadFromFile("mainmenu_background.png");
     mm_bg.setTexture(mainmenu_background);
-    RenderWindow window(VideoMode(1920, 1080), "GraFULLSCREEN");
+    RenderWindow window(VideoMode(1920, 1080), "GRA");
     string name;
     window.setFramerateLimit(60);
 
