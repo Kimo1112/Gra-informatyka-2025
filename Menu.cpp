@@ -10,19 +10,19 @@ Menu::Menu(float width, float height) {
 
     mainmenu[0].setFont(font);
     mainmenu[0].setFillColor(Color{ 255, 204, 0 });
-    mainmenu[0].setString("Play");
+    mainmenu[0].setString("CONTINUE");
     mainmenu[0].setCharacterSize(140);
     mainmenu[0].setPosition(Vector2f(width / 2 - 100, height / 4));
 
     mainmenu[1].setFont(font);
     mainmenu[1].setFillColor(Color::White);
-    mainmenu[1].setString("Settings");
+    mainmenu[1].setString("NEW GAME");
     mainmenu[1].setCharacterSize(80);
     mainmenu[1].setPosition(Vector2f(width / 2 - 100, height / (4) + 300));
 
     mainmenu[2].setFont(font);
     mainmenu[2].setFillColor(Color::White);
-    mainmenu[2].setString("Exit");
+    mainmenu[2].setString("EXIT");
     mainmenu[2].setCharacterSize(80);
     mainmenu[2].setPosition(Vector2f(width / 2 - 100, height / (4) + 400));
 

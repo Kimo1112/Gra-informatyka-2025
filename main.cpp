@@ -1,4 +1,6 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
 #include <iostream>
 #include "Menu.h"
 #include <vector>
@@ -10,153 +12,323 @@ using namespace sf;
 int pagenumber = 1000;
 
 void movement(RenderWindow& window) {
-    vector<Texture> textures_walking_right(8);
-    vector<Texture> textures_walking_left(8);
     vector<Texture> textures_walking_up(8);
+
     vector<Texture> textures_walking_down(8);
+
+    vector<Texture> textures_walking_left(8);
+
+    vector<Texture> textures_walking_right(8);
+
     vector<Texture> textures_walking_left_up(8);
-    vector<Texture> textures_walking_left_down(8);
+
     vector<Texture> textures_walking_right_up(8);
+
+    vector<Texture> textures_walking_left_down(8);
+
     vector<Texture> textures_walking_right_down(8);
-    vector<Texture> textures_idle(8);
+
+    vector<Texture> textures_idle_up(8);
+
+    vector<Texture> textures_idle_down(8);
+
+    vector<Texture> textures_idle_left(8);
+
+    vector<Texture> textures_idle_right(8);
+
+    vector<Texture> textures_idle_left_up(8);
+
+    vector<Texture> textures_idle_right_up(8);
+
+    vector<Texture> textures_idle_left_down(8);
+
+    vector<Texture> textures_idle_right_down(8);
 
     for (int i = 0; i < 8; ++i) {
-        if (!textures_walking_right[i].loadFromFile("assets\\player_walking_right_frame" + to_string(i + 1) + ".png"));
-        if (!textures_walking_left[i].loadFromFile("assets\\player_walking_left_frame" + to_string(i + 1) + ".png"));
         if (!textures_walking_up[i].loadFromFile("assets\\player_walking_up_frame" + to_string(i + 1) + ".png"));
+
         if (!textures_walking_down[i].loadFromFile("assets\\player_walking_down_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_walking_left[i].loadFromFile("assets\\player_walking_left_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_walking_right[i].loadFromFile("assets\\player_walking_right_frame" + to_string(i + 1) + ".png"));
+
         if (!textures_walking_left_up[i].loadFromFile("assets\\player_walking_left_up_frame" + to_string(i + 1) + ".png"));
-        if (!textures_walking_left_down[i].loadFromFile("assets\\player_walking_left_down_frame" + to_string(i + 1) + ".png"));
+
         if (!textures_walking_right_up[i].loadFromFile("assets\\player_walking_right_up_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_walking_left_down[i].loadFromFile("assets\\player_walking_left_down_frame" + to_string(i + 1) + ".png"));
+
         if (!textures_walking_right_down[i].loadFromFile("assets\\player_walking_right_down_frame" + to_string(i + 1) + ".png"));
-        if (!textures_idle[i].loadFromFile("assets\\player_idle" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_up[i].loadFromFile("assets\\player_idle_up_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_down[i].loadFromFile("assets\\player_idle_down_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_left[i].loadFromFile("assets\\player_idle_left_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_right[i].loadFromFile("assets\\player_idle_right_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_left_up[i].loadFromFile("assets\\player_idle_left_up_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_right_up[i].loadFromFile("assets\\player_idle_right_up_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_left_down[i].loadFromFile("assets\\player_idle_left_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_idle_right_down[i].loadFromFile("assets\\player_idle_right_frame" + to_string(i + 1) + ".png"));
     }
+
+    RectangleShape transitionScreen(Vector2f(window.getSize().x, window.getSize().y));
+    transitionScreen.setFillColor(Color(0, 0, 0, 255));
+    bool transitionActive = true;
+    Clock transitionClock;
 
     Sprite player;
     player.setPosition(500, 500);
     player.setScale(5, 5);
 
+
     size_t currentFrame = 0;
     Clock clock;
     float frameDuration = 0.15;
+    int lastDirection = 0;
 
+    Texture shadow;
+    shadow.loadFromFile("assets\\player_shadow.png");
+    Sprite player_shadow;
+    player_shadow.setTexture(shadow);
     Texture gameplay1_background;
-    gameplay1_background.loadFromFile("gameplay1_background.jpeg");
+    gameplay1_background.loadFromFile("assets\\gameplay1_background.png");
     Sprite g1_bg;
     g1_bg.setTexture(gameplay1_background);
 
+    player_shadow.setPosition(545, 615);
+    player_shadow.setScale(4, 4);
+
+
     while (window.isOpen()) {
 
+        bool isMoving = false;
         Event event;
-
         while (window.pollEvent(event)) {
+
             if (event.type == Event::Closed) {
                 window.close();
             }
         }
 
-        bool isMoving = false;
-        bool a = 1;
-
-        if (Keyboard::isKeyPressed(Keyboard::A) && Keyboard::isKeyPressed(Keyboard::W)) {
-
-            isMoving = true;
-            player.move(-0.07, -0.07);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_left_up.size();
-                player.setTexture(textures_walking_left_up[currentFrame]);
-                clock.restart();
-            }
-        }
-
-        if (Keyboard::isKeyPressed(Keyboard::A) && Keyboard::isKeyPressed(Keyboard::S)) {
-
-            isMoving = true;
-            player.move(-0.07, 0.07);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_left_down.size();
-                player.setTexture(textures_walking_left_down[currentFrame]);
-                clock.restart();
-            }
-        }
-
-        if (Keyboard::isKeyPressed(Keyboard::D) && Keyboard::isKeyPressed(Keyboard::W)) {
-
-            isMoving = true;
-            player.move(0.07, -0.07);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_right_up.size();
-                player.setTexture(textures_walking_right_up[currentFrame]);
-                clock.restart();
-            }
-        }
-
-        if (Keyboard::isKeyPressed(Keyboard::D) && Keyboard::isKeyPressed(Keyboard::S)) {
-
-            isMoving = true;
-            player.move(0.07, 0.07);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_right_down.size();
-                player.setTexture(textures_walking_right_down[currentFrame]);
-                clock.restart();
-            }
-        }
-
-        if (Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A)) {
-
-            isMoving = true;
-            player.move(0.1, 0);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_right.size();
-                player.setTexture(textures_walking_right[currentFrame]);
-                clock.restart();
-            }
-        }
-
-        if (Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::D)) {
-
-            isMoving = true;
-            player.move(-0.1, 0);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_left.size();
-                player.setTexture(textures_walking_left[currentFrame]);
-                clock.restart();
-        }            }
-
-        
-        if (Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::S)) {
-
-            isMoving = true;
-            player.move(0, -0.075);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_up.size();
-                player.setTexture(textures_walking_up[currentFrame]);
-                clock.restart();
-            }
-        }
-        
-        if (Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::W)) {
-
-            isMoving = true;
-            player.move(0, 0.075);
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_walking_down.size();
-                player.setTexture(textures_walking_down[currentFrame]);
-                clock.restart();
-            }
-        }
-        if (!isMoving) {
-            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
-                currentFrame = (currentFrame + 1) % textures_idle.size();
-                player.setTexture(textures_idle[currentFrame]);
-                clock.restart();
-            }
-        }
 
         window.clear();
         window.draw(g1_bg);
         window.draw(player);
+        window.draw(player_shadow);
+
+        if (lastDirection == 0) {
+            if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                currentFrame = (currentFrame + 1) % textures_idle_right.size();
+                player.setTexture(textures_idle_right[currentFrame]);
+                clock.restart();
+            }
+        }
+
+        if (transitionActive) {
+            float elapsedTime = transitionClock.getElapsedTime().asSeconds();
+
+            if (elapsedTime <= 1.0) {
+                int alpha = static_cast<int>(255 * (2.0 - elapsedTime));
+                transitionScreen.setFillColor(Color(0, 0, 0, alpha));
+            }
+            else {
+                transitionActive = false;
+            }
+            window.draw(transitionScreen);
+        }
+        else {
+
+
+            //UP
+            if (Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::S)) {
+                lastDirection = 1;
+                isMoving = true;
+                player.move(0, -5);
+                player_shadow.move(0, -5);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_up.size();
+                    player.setTexture(textures_walking_up[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //DOWN
+            if (Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::W)) {
+                lastDirection = 2;
+                isMoving = true;
+                player.move(0, 5);
+                player_shadow.move(0, 5);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_down.size();
+                    player.setTexture(textures_walking_down[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //LEFT
+            if (Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::D)) {
+                lastDirection = 3;
+                isMoving = true;
+                player.move(-6, 0);
+                player_shadow.move(-6, 0);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_left.size();
+                    player.setTexture(textures_walking_left[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //RIGHT
+            if (Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A)) {
+                lastDirection = 4;
+                isMoving = true;
+                player.move(6, 0);
+                player_shadow.move(6, 0);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_right.size();
+                    player.setTexture(textures_walking_right[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //LEFT UP
+            if (Keyboard::isKeyPressed(Keyboard::A) && Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::D)) {
+                lastDirection = 5;
+                isMoving = true;
+                player.move(-5.5, -5.5);
+                player_shadow.move(-5.5, -5.5);
+
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_left_up.size();
+                    player.setTexture(textures_walking_left_up[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //RIGHT UP
+            if (Keyboard::isKeyPressed(Keyboard::D) && Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A)) {
+                isMoving = true;
+                lastDirection = 6;
+                player.move(6, -6);
+                player_shadow.move(6, -6);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_right_up.size();
+                    player.setTexture(textures_walking_right_up[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //LEFT DOWN
+            if (Keyboard::isKeyPressed(Keyboard::A) && Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::D)) {
+                isMoving = true;
+                lastDirection = 7;
+                player.move(-6, 6);
+                player_shadow.move(-6, 6);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_left_down.size();
+                    player.setTexture(textures_walking_left_down[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            //RIGHT DOWN
+            if (Keyboard::isKeyPressed(Keyboard::D) && Keyboard::isKeyPressed(Keyboard::S) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::W)) {
+                isMoving = true;
+                lastDirection = 8;
+                player.move(6, 6);
+                player_shadow.move(6, 6);
+
+                if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                    currentFrame = (currentFrame + 1) % textures_walking_right_down.size();
+                    player.setTexture(textures_walking_right_down[currentFrame]);
+                    clock.restart();
+                }
+            }
+
+            if (!isMoving) {
+                if (lastDirection == 1) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_up.size();
+                        player.setTexture(textures_idle_up[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 2) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_down.size();
+                        player.setTexture(textures_idle_down[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 3) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_left.size();
+                        player.setTexture(textures_idle_left[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 4) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_right.size();
+                        player.setTexture(textures_idle_right[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 5) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_left_up.size();
+                        player.setTexture(textures_idle_left_up[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 6) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_right_up.size();
+                        player.setTexture(textures_idle_right_up[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 7) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_left_down.size();
+                        player.setTexture(textures_idle_left_down[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+                if (lastDirection == 8) {
+                    if (clock.getElapsedTime().asSeconds() >= frameDuration) {
+                        currentFrame = (currentFrame + 1) % textures_idle_right_down.size();
+                        player.setTexture(textures_idle_right_down[currentFrame]);
+                        clock.restart();
+                    }
+                }
+
+            }
+        }
+
         window.display();
+
     }
 }
 
@@ -238,6 +410,7 @@ int main()
     mm_bg.setTexture(mainmenu_background);
     RenderWindow window(VideoMode(1920, 1080), "GraFULLSCREEN");
     string name;
+    window.setFramerateLimit(60);
 
     while (true) {
         if (pagenumber == 1000) {
