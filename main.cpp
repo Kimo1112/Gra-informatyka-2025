@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+Ôªø#include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <iostream>
@@ -10,15 +10,111 @@
 using namespace std;
 using namespace sf;
 
-
 int pagenumber = 1000;
 
-void collision_Floor1_Room1(RectangleShape& playerHitboxes, const WallManager& wallManager, Sprite& player) {
+void game_Floor1_Room1(Sprite& player, RectangleShape& playerHitbox, Sprite& player_shadow) {
+    player.setScale(5, 5);
+    player.setPosition(750, 750); //zale≈ºne od pokoju
+
+    playerHitbox.setPosition(815, 800); // tylko do startu gry
+
+    player_shadow.setPosition(795, 865);
+    player_shadow.setScale(4, 4);
+}
+
+void player_Assets(Sprite& player, RectangleShape& playerHitbox, Texture& shadow, Sprite& player_shadow) {
+
+    playerHitbox.setSize(Vector2f(60, 100));
+    playerHitbox.setFillColor(Color::Transparent);
+    playerHitbox.setOutlineColor(Color::Red);
+    playerHitbox.setOutlineThickness(2);
+
+    shadow.loadFromFile("assets\\player_shadow.png");
+    player_shadow.setTexture(shadow);
+}
+
+void objects_Floor1_Room1(RenderWindow& window, WallManager& wallManager, RectangleShape& door, RectangleShape& enemy, Sprite& background_f1_r1, Texture& background_Floor1_Room1) {
+
+    background_Floor1_Room1.loadFromFile("assets\\gameplay1_background.png");
+    background_f1_r1.setTexture(background_Floor1_Room1);
+
+    wallManager.addWall(Wall(480, 199, 106, 872));
+    wallManager.addWall(Wall(1326, 210, 108, 860));
+    wallManager.addWall(Wall(486, 961, 910, 108));
+    wallManager.addWall(Wall(490, 194, 286, 124));
+    wallManager.addWall(Wall(1142, 194, 285, 124));
+    wallManager.addWall(Wall(673, 0, 103, 202));
+    wallManager.addWall(Wall(1142, 0, 107, 209));
+
+    door.setPosition(770, 187);
+    door.setSize(Vector2f(379, 131));
+    door.setFillColor(Color::Transparent);
+    door.setOutlineColor(Color::Red);
+    door.setOutlineThickness(2);
+
+    enemy.setPosition(1150, 788);
+    enemy.setSize(Vector2f(100, 100));
+    enemy.setFillColor(Color::Transparent);
+    enemy.setOutlineColor(Color::Cyan);
+    enemy.setOutlineThickness(2);
+}
+
+void enemy_collision(RectangleShape& playerHitboxes, Sprite& player, Sprite& player_shadow, RectangleShape& enemy) {
+    FloatRect playerBounds = playerHitboxes.getGlobalBounds();
+    FloatRect enemy_Bounds = enemy.getGlobalBounds();
+
+    if (playerBounds.intersects(enemy_Bounds)) {
+        float overlapLeft = (playerBounds.left + playerBounds.width) - enemy_Bounds.left;
+        float overlapRight = (enemy_Bounds.left + enemy_Bounds.width) - playerBounds.left;
+        float overlapTop = (playerBounds.top + playerBounds.height) - enemy_Bounds.top;
+        float overlapBottom = (enemy_Bounds.top + enemy_Bounds.height) - playerBounds.top;
+
+        bool fromLeft = overlapLeft < overlapRight && overlapLeft < overlapTop && overlapLeft < overlapBottom;
+        bool fromRight = overlapRight < overlapLeft && overlapRight < overlapTop && overlapRight < overlapBottom;
+        bool fromTop = overlapTop < overlapBottom && overlapTop < overlapLeft && overlapTop < overlapRight;
+        bool fromBottom = overlapBottom < overlapTop && overlapBottom < overlapLeft && overlapBottom < overlapRight;
+
+        if (fromLeft) {
+            playerHitboxes.setPosition(enemy_Bounds.left - playerBounds.width, playerHitboxes.getPosition().y);
+            player.setPosition(enemy_Bounds.left - playerBounds.width, player.getPosition().y);
+        }
+        else if (fromRight) {
+            playerHitboxes.setPosition(enemy_Bounds.left + enemy_Bounds.width, playerHitboxes.getPosition().y);
+            player.setPosition(enemy_Bounds.left + enemy_Bounds.width, player.getPosition().y);
+        }
+        else if (fromTop) {
+            playerHitboxes.setPosition(playerHitboxes.getPosition().x, enemy_Bounds.top - playerBounds.height);
+            player.setPosition(player.getPosition().x, enemy_Bounds.top - playerBounds.height);
+        }
+        else if (fromBottom) {
+            playerHitboxes.setPosition(playerHitboxes.getPosition().x, enemy_Bounds.top + enemy_Bounds.height);
+            player.setPosition(player.getPosition().x, enemy_Bounds.top + enemy_Bounds.height);
+        }
+        player.setPosition(playerHitboxes.getPosition() - Vector2f(50, 50));
+        player_shadow.setPosition(playerHitboxes.getPosition() - Vector2f(50, 50) + Vector2f(45, 115));
+    }
+}
+
+void incoming_damage(RectangleShape& playerHitboxes, RectangleShape& enemy, int& player_health, Clock& damageCooldown, float cooldownTime) {
+    FloatRect playerBounds = playerHitboxes.getGlobalBounds();
+    FloatRect enemy_Bounds = enemy.getGlobalBounds();
+    if (damageCooldown.getElapsedTime().asSeconds() < cooldownTime) {
+        return;
+    }
+    if (playerBounds.intersects(enemy_Bounds)) {
+        player_health -= 1;
+        damageCooldown.restart();
+        cout << player_health << endl;
+
+    }
+}
+
+void collision_Floor1_Room1(RectangleShape& playerHitboxes, const WallManager& wallManager, Sprite& player, Sprite& player_shadow) {
     for (const auto& wall : wallManager.getWalls()) {
         FloatRect playerBounds = playerHitboxes.getGlobalBounds();
         FloatRect wallBounds = wall.getGlobalBounds();
 
-        if (playerHitboxes.getGlobalBounds().intersects(wall.getGlobalBounds())) {
+        if (playerBounds.intersects(wallBounds)) {
 
             float overlapLeft = (playerBounds.left + playerBounds.width) - wallBounds.left;
             float overlapRight = (wallBounds.left + wallBounds.width) - playerBounds.left;
@@ -48,11 +144,12 @@ void collision_Floor1_Room1(RectangleShape& playerHitboxes, const WallManager& w
             }
 
             player.setPosition(playerHitboxes.getPosition() - Vector2f(50, 50));
+            player_shadow.setPosition(playerHitboxes.getPosition() - Vector2f(50, 50) + Vector2f(45, 115));
         }
     }
 }
 
-void movement(RenderWindow& window) {
+void game(RenderWindow& window) {
     vector<Texture> textures_walking_up(8);
 
     vector<Texture> textures_walking_down(8);
@@ -84,6 +181,8 @@ void movement(RenderWindow& window) {
     vector<Texture> textures_idle_left_down(8);
 
     vector<Texture> textures_idle_right_down(8);
+
+    vector<Texture> textures_attacking_up(8);
 
     for (int i = 0; i < 8; ++i) {
         if (!textures_walking_up[i].loadFromFile("assets\\player_walking_up_frame" + to_string(i + 1) + ".png"));
@@ -117,51 +216,31 @@ void movement(RenderWindow& window) {
         if (!textures_idle_left_down[i].loadFromFile("assets\\player_idle_left_frame" + to_string(i + 1) + ".png"));
 
         if (!textures_idle_right_down[i].loadFromFile("assets\\player_idle_right_frame" + to_string(i + 1) + ".png"));
+
+        if (!textures_attacking_up[i].loadFromFile("assets\\player_attacking_up_frame" + to_string(i + 1) + ".png"));
     }
-
-    RectangleShape transitionScreen(Vector2f(window.getSize().x, window.getSize().y));
-    transitionScreen.setFillColor(Color(0, 0, 0, 255));
-    bool transitionActive = true;
-    Clock transitionClock;
-
-    Sprite player;
-    player.setPosition(750, 750);
-    player.setScale(5, 5);
-
-
+    WallManager wallManager;
+    Sprite player, player_shadow, background_f1_r1;
+    RectangleShape playerHitbox, door, enemy, transitionScreen(Vector2f(window.getSize().x, window.getSize().y));
+    Texture background_Floor1_Room1, shadow;
+    Clock clock, damageCooldown, transitionClock;
     size_t currentFrame = 0;
-    Clock clock;
+
+    float cooldownTime = 1.5;
     float frameDuration = 0.15;
     int lastDirection = 0;
+    int player_health = 3; //wrzuƒá do pliku
+    bool transitionActive = true, isMoving;
 
-    Texture shadow;
-    shadow.loadFromFile("assets\\player_shadow.png");
-    Sprite player_shadow;
-    player_shadow.setTexture(shadow);
-    Texture gameplay1_background;
-    gameplay1_background.loadFromFile("assets\\gameplay1_background.png");
-    Sprite g1_bg;
-    g1_bg.setTexture(gameplay1_background);
+    transitionScreen.setFillColor(Color(0, 0, 0, 255));
+    player.setTexture(textures_idle_right[0]); // ≈ºeby siƒô za≈Çadowa≈Ç najpierw przed animacjƒÖ
 
-    player_shadow.setPosition(795, 865);
-    player_shadow.setScale(4, 4);
+    objects_Floor1_Room1(window, wallManager, door, enemy, background_f1_r1, background_Floor1_Room1);
+    player_Assets(player, playerHitbox, shadow, player_shadow);
+    game_Floor1_Room1(player, playerHitbox, player_shadow);
 
-    RectangleShape playerHitbox;
-    playerHitbox.setPosition(815, 800);
-    playerHitbox.setSize(Vector2f(50,100));
-    playerHitbox.setFillColor(Color::Transparent);
-    playerHitbox.setOutlineColor(Color::Red);
-    playerHitbox.setOutlineThickness(2);
-
-    WallManager wallManager;
-
-    wallManager.addWall(Wall(483, 197, 98, 885));
-    wallManager.addWall(Wall(1335, 203, 98, 885));
-    wallManager.addWall(Wall(486, 961, 943, 108));
 
     while (window.isOpen()) {
-
-        bool isMoving = false;
         Event event;
         while (window.pollEvent(event)) {
 
@@ -170,23 +249,16 @@ void movement(RenderWindow& window) {
             }
         }
 
-        collision_Floor1_Room1(playerHitbox, wallManager, player);
+        isMoving = false;
 
         window.clear();
-        window.draw(g1_bg);
-        window.draw(player);
+        window.draw(background_f1_r1);
         window.draw(player_shadow);
+        window.draw(player);
         window.draw(playerHitbox);
-    
+        window.draw(door);
+        window.draw(enemy);
         wallManager.drawWalls(window);
-
-
-        for (const auto& wall : wallManager.getWalls()) {
-            if (playerHitbox.getGlobalBounds().intersects(wall.getGlobalBounds())) {
-                // Jeúli dochodzi do kolizji, zatrzymujemy gracza w miejscu
-                player.setPosition(player.getPosition() - Vector2f(1, 0));  // Moøesz dostosowaÊ to w zaleønoúci od kierunku
-            }
-        }
 
         if (lastDirection == 0) {
             if (clock.getElapsedTime().asSeconds() >= frameDuration) {
@@ -196,11 +268,15 @@ void movement(RenderWindow& window) {
             }
         }
 
+        collision_Floor1_Room1(playerHitbox, wallManager, player, player_shadow);
+        incoming_damage(playerHitbox, enemy, player_health, damageCooldown, cooldownTime);
+        enemy_collision(playerHitbox, player, player_shadow, enemy);
+
         if (transitionActive) {
             float elapsedTime = transitionClock.getElapsedTime().asSeconds();
 
             if (elapsedTime <= 1.0) {
-                int alpha = static_cast<int>(255 * (2.0 - elapsedTime));
+                int alpha = static_cast<int>(255 * (1.0 - elapsedTime));
                 transitionScreen.setFillColor(Color(0, 0, 0, alpha));
             }
             else {
@@ -209,7 +285,9 @@ void movement(RenderWindow& window) {
             window.draw(transitionScreen);
         }
         else {
-
+            if (Keyboard::isKeyPressed(Keyboard::E)) {
+                door.setPosition(0, 0);
+            }
 
             //UP
             if (Keyboard::isKeyPressed(Keyboard::W) && !Keyboard::isKeyPressed(Keyboard::A) && !Keyboard::isKeyPressed(Keyboard::D) && !Keyboard::isKeyPressed(Keyboard::S)) {
@@ -231,7 +309,7 @@ void movement(RenderWindow& window) {
                 lastDirection = 2;
                 isMoving = true;
                 player.move(0, 5);
-                player_shadow.move(0, 5); 
+                player_shadow.move(0, 5);
                 playerHitbox.move(0, 5);
 
                 if (clock.getElapsedTime().asSeconds() >= frameDuration) {
@@ -399,8 +477,43 @@ void movement(RenderWindow& window) {
             }
         }
 
-        window.display();
+            
 
+          /* player_actions(
+                transitionScreen,
+                window,
+                playerHitbox,
+                wallManager,
+                player,
+                player_shadow,
+                door,
+                enemy,
+                lastDirection,
+                clock,
+                frameDuration,
+                currentFrame,
+                transitionActive,
+                transitionClock,
+                textures_walking_up,
+                textures_walking_down,
+                textures_walking_left,
+                textures_walking_right,
+                textures_walking_left_up,
+                textures_walking_right_up,
+                textures_walking_left_down,
+                textures_walking_right_down,
+                textures_idle_up,
+                textures_idle_down,
+                textures_idle_left,
+                textures_idle_right,
+                textures_idle_left_up,
+                textures_idle_right_up,
+                textures_idle_left_down,
+                textures_idle_right_down,
+                textures_attacking_up);
+                */
+
+        window.display();
     }
 }
 
@@ -540,7 +653,7 @@ int main()
             }
 
             if (pagenumber == 3) {
-                movement(window);
+                game(window);
             }
         }
     }
