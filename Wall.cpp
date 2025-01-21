@@ -4,7 +4,7 @@ Wall::Wall(float x, float y, float width, float height) {
     wallShape.setPosition(x, y);
     wallShape.setSize(Vector2f(width, height));
     wallShape.setFillColor(Color::Transparent);
-    wallShape.setOutlineColor(Color::Red);
+    wallShape.setOutlineColor(Color::Transparent);
     wallShape.setOutlineThickness(2);
 }
 
