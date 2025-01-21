@@ -36,26 +36,25 @@ struct Enemy {
 void spawnEnemies(vector<Enemy>& enemies, Clock& spawnClock, float& spawnInterval, Vector2f spawnPoint1, Vector2f spawnPoint2, Vector2f spawnPoint3, float acceleration) {
     if (spawnClock.getElapsedTime().asSeconds() >= spawnInterval) {
 
-        // Losowe wybranie jednej z dwóch pozycji startowych:
         int spawnChoice = rand() % 3;
         Vector2f spawnPosition;
         if (spawnChoice == 0) {
-            spawnPosition = spawnPoint1;  // Lewy bok
+            spawnPosition = spawnPoint1;  
         }
         else if (spawnChoice == 1) {
-            spawnPosition = spawnPoint2;  // Prawy bok
+            spawnPosition = spawnPoint2; 
         }
         else {
-            spawnPosition = spawnPoint3;  // Dolny bok
+            spawnPosition = spawnPoint3; 
         }
-        RectangleShape newEnemy(Vector2f(50.0f, 50.0f));  // Rozmiar przeciwnika
-        newEnemy.setFillColor(Color::Red);  // Kolor przeciwnika
-        newEnemy.setPosition(spawnPosition);  // Ustawienie pozycji przeciwnika
+        RectangleShape newEnemy(Vector2f(50.0f, 50.0f));
+        newEnemy.setFillColor(Color::Red);  
+        newEnemy.setPosition(spawnPosition); 
 
-        enemies.push_back(Enemy(newEnemy, 2));  // Dodanie nowego przeciwnika z życiem 2
+        enemies.push_back(Enemy(newEnemy, 2));  
 
-        // Przyspieszanie pojawiania się kolejnych przeciwników
-        spawnInterval = std::max(0.5f, spawnInterval - acceleration);
+      
+        spawnInterval = max(0.5f, spawnInterval - acceleration);
 
         spawnClock.restart();
     }
@@ -69,7 +68,7 @@ void moveEnemies(vector<Enemy>& enemies, const RectangleShape& playerHitbox, flo
             direction /= length;
         }
 
-        enemy.shape.move(direction * speed);  // Przemieszczanie przeciwnika w stronę gracza
+        enemy.shape.move(direction * speed);
     }
 }
 
@@ -134,11 +133,10 @@ void player_attack(vector<Enemy>& enemies, RectangleShape& attackHitbox) {
         FloatRect enemyBounds = enemy.shape.getGlobalBounds();
 
         if (attackBounds.intersects(enemyBounds)) {
-            enemy.health -= 1;  // Zmniejszenie zdrowia przeciwnika
+            enemy.health -= 1;  
 
             if (enemy.health <= 0) {
-                // Jeśli zdrowie przeciwnika spadnie do 0, usuwamy go
-                auto it = std::remove_if(enemies.begin(), enemies.end(), [&](const Enemy& e) {
+                auto it = remove_if(enemies.begin(), enemies.end(), [&](const Enemy& e) {
                     return &e == &enemy;
                     });
                 enemies.erase(it, enemies.end());
@@ -533,9 +531,9 @@ void game_Floor1_Room1(Sprite& player, RectangleShape& playerHitbox, Sprite& pla
     attackHitboxRight.setPosition(914, 850);
 
     player.setScale(5, 5);
-    player.setPosition(750, 750); //zależnei od pokoju
+    player.setPosition(750, 750); 
 
-    playerHitbox.setPosition(850, 820); // tylko do startu gry
+    playerHitbox.setPosition(850, 820); 
 
     player_shadow.setPosition(795, 865);
     player_shadow.setScale(5, 5);
@@ -674,18 +672,17 @@ void enemy_collision(RectangleShape& playerHitboxes, Sprite& player, Sprite& pla
 void incoming_damage(RectangleShape& playerHitboxes, vector<Enemy>& enemies, int& player_health, Clock& damageCooldown, float cooldownTime) {
     FloatRect playerBounds = playerHitboxes.getGlobalBounds();
 
-    // Sprawdzenie, czy przeciwnik wchodzi w kolizję z graczem
+    
     for (auto& enemy : enemies) {
         FloatRect enemyBounds = enemy.shape.getGlobalBounds();
 
-        // Jeżeli cooldown nie minął, nie wykonujemy kolejnej kolizji
         if (damageCooldown.getElapsedTime().asSeconds() < cooldownTime) {
             return;
         }
 
         if (playerBounds.intersects(enemyBounds)) {
-            player_health -= 1;  // Zmniejszenie zdrowia gracza
-            damageCooldown.restart();  // Restart cooldown
+            player_health -= 1; 
+            damageCooldown.restart();
         }
     }
 }
@@ -964,7 +961,7 @@ void game(RenderWindow& window, int& pagenumber, string& name) {
     death_screen.setTexture(deathScreen);
     transitionScreen.setFillColor(Color(0, 0, 0, 255));
     roomTransitionScreen.setFillColor(Color(0, 0, 0, 0));
-    player.setTexture(textures_idle_right[0]); // żeby się załadował najpierw przed animacją
+    player.setTexture(textures_idle_right[0]); 
     player_hearts.setPosition(10, 10);
     player_hearts.setScale(5, 5);
 
